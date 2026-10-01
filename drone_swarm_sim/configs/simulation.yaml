@@ -1,0 +1,283 @@
+# Drone swarm simulation — default configuration.
+#
+# Every key is optional: missing keys fall back to the defaults defined in
+# simulation/config.py. Unknown keys inside a section are rejected.
+# Override from the command line with:  python -m simulation --set simulation.drone_count=25
+
+simulation:
+  drone_count: 10
+  simulation_rate: 30          # engine ticks per second [Hz]
+  physics_substeps: 2
+  real_time_factor: 1.0
+  seed: 42                     # null for non-deterministic runs
+  auto_start: true
+  max_drones: 200
+
+origin:                        # geodetic origin of the local ENU frame
+  latitude: 47.397742
+  longitude: 8.545594
+  altitude: 488.0
+
+environment:
+  size_x: 2000                 # [m] centred on the origin
+  size_y: 2000
+  max_altitude: 300            # geofence ceiling [m AGL]
+  ground_level: 0.0
+  scene_file: configs/scenes/demo.yaml   # obstacles (buildings, towers, trees); null = open field
+
+terrain:                       # height field under the world bounds
+  enabled: true
+  source: procedural           # procedural | file
+  file: ""                     # .asc (ESRI grid) | .png (8/16-bit grayscale) | .npy | .csv, stretched over the world
+  max_height: 30.0             # procedural hill height / brightest PNG pixel [m]
+  vertical_scale: 1.0          # multiplies file heights
+  offset: 0.0                  # added to every height [m]
+  resolution: 10.0             # procedural grid cell [m]
+  seed: 7
+  hills: 8
+  hill_radius: 180.0
+  flatten_radius: 150.0        # level ground around home so the pads are flat [m]
+
+obstacles:                     # obstacle avoidance + path planning
+  avoidance: true              # velocity stage between formation and collision avoidance
+  clearance: 6.0               # distance kept from obstacle surfaces [m]
+  influence: 25.0              # obstacles nearer than this are considered [m]
+  terrain_clearance: 2.0       # minimum height above terrain in flight [m], <= drone.min_altitude
+  collision_margin: 0.3        # closer than drone radius + margin to a surface = crash [m]
+  plan_paths: true             # route gotos, formation moves and mission legs around obstacles
+  planner: astar               # astar (2-D grid at flight altitude) | rrtstar (3-D sampling)
+  grid_resolution: 4.0         # A* cell [m]
+  max_grid_cells: 90000
+  rrt_iterations: 2500
+  rrt_step: 12.0
+  seed: 11
+
+home:
+  position_x: 0.0
+  position_y: 0.0
+  pad_layout: grid             # grid | line | circle
+  pad_spacing: 12.0            # must exceed swarm.warning_distance to avoid warnings at takeoff
+
+drone:
+  mass_kg: 1.5
+  radius: 0.35
+  payload_kg: 0.0
+  max_horizontal_speed: 15.0
+  max_climb_rate: 5.0
+  max_descent_rate: 3.0
+  max_acceleration: 6.0
+  max_tilt_deg: 35.0
+  thrust_to_weight: 2.2
+  max_yaw_rate_deg: 90.0
+  thrust_time_constant: 0.15
+  drag_coefficient: 0.3
+  position_gain: 1.0
+  velocity_kp: 3.0
+  velocity_ki: 1.0
+  velocity_integral_limit: 3.0
+  yaw_gain: 2.0
+  cruise_speed: 10.0
+  takeoff_altitude: 20.0
+  min_altitude: 2.0
+  acceptance_radius: 1.0
+  land_speed: 1.5
+  rtl_altitude: 40.0
+  offboard_timeout: 0.5
+  auto_disarm_delay: 5.0
+  hard_landing_speed: 3.5
+  emergency_stop_behavior: land   # land | kill
+  emergency_descent_rate: 2.5
+
+battery:
+  capacity_wh: 100.0
+  cells: 4
+  initial_percent_min: 85
+  initial_percent_max: 100
+  hover_power_w: 180.0
+  speed_power_coeff: 0.9
+  drain_multiplier: 1.0        # raise (e.g. 20) to exercise low-battery failsafes quickly
+  warning: 30
+  return_home: 20
+  emergency: 10
+
+swarm:
+  separation_distance: 5         # safety radius; entering it counts as a separation violation
+  warning_distance: 10
+  collision_distance: 1.0
+  min_separation: 4.0            # HARD floor kept by the safety filter (collision < min <= separation) [m]
+  neighbor_radius: 60
+  max_neighbors: 8
+  use_kdtree: true
+  # collision avoidance: ORCA velocity obstacles (primary), potential field (fallback), hard safety filter
+  collision_avoidance: true
+  avoidance_method: orca         # orca | potential_field
+  avoidance_radius: 12.0         # influence radius of the repulsive field [m]
+  avoidance_max_speed: 5.0       # largest potential-field correction [m/s]
+  avoidance_horizon: 4.0         # potential-field conflict look-ahead [s]
+  avoidance_margin: 2.0          # clearance kept beyond separation_distance [m]
+  avoidance_slowdown: 0.7        # 0..1: how strongly drones yield before a predicted conflict
+  orca_time_horizon: 3.0         # ORCA velocity obstacles look this far ahead [s]
+  orca_max_neighbors: 10         # closest neighbours per drone in the ORCA program
+  safety_brake_fraction: 0.5     # share of max acceleration the safety filter assumes for braking
+  # formation control
+  formation: "v"                 # line | column | v | diamond | grid | circle | wedge | custom
+  formation_spacing: 15.0        # [m], must exceed separation_distance
+  formation_reference: virtual   # virtual (movable reference point) | leader
+  formation_speed: 6.0           # formation cruise speed [m/s]
+  formation_catchup_speed: 8.0   # max speed used to reach a slot [m/s]
+  formation_heading: null        # fixed heading [deg]; null = face the direction of travel
+  formation_altitude_layers: 1   # spread slots over this many altitude layers (1-10)
+  formation_layer_spacing: 6.0   # vertical distance between layers [m], >= min_separation
+  formation_transition: synchronized   # synchronized (straight lines, arrive together, no crossings) | direct
+  v_angle_deg: 45.0              # half-angle of the V arms
+  custom_formation:              # [forward, left, up] offsets in metres, used by shape "custom"
+    - [0, 0, 0]
+    - [-15, 15, 0]
+    - [-15, -15, 0]
+    - [-30, 30, 0]
+    - [-30, 0, 0]
+    - [-30, -30, 0]
+  leader_promotion: true         # leader lost (failed / comm lost / landed) -> promote a follower
+
+flocking:                        # V = W1*separation + W2*alignment + W3*cohesion + W4*goal + W5*obstacle
+  separation_weight: 1.6
+  alignment_weight: 0.6
+  cohesion_weight: 0.8
+  goal_weight: 1.0
+  obstacle_weight: 2.0           # obstacle term is added in Phase 3
+  separation_radius: 9.0
+  perception_radius: 40.0
+  cohesion_gain: 0.15
+  max_speed: 8.0
+  altitude_gain: 0.6
+
+mission:                         # mission planning & execution (PLAN tab)
+  directory: data/missions       # mission_*.json library (relative to the project)
+  default_altitude: 30.0         # new waypoints [m above home]
+  default_speed: 8.0             # new waypoints [m/s]
+  loiter_radius: 20.0            # LOITER orbit radius when a waypoint does not set one [m]
+  arrival_radius: 2.0            # single drone: waypoint reached within this distance [m]
+  formation_arrival_error: 3.0   # formation: waypoint reached when every slot error is below this [m]
+  battery_reserve_percent: 20.0  # validation keeps this share of capacity untouched
+  camera_hfov_deg: 70.0          # survey camera horizontal field of view [deg]
+  survey_overlap: 70.0           # default side overlap between survey lines [%]
+  survey_finish: RTL             # appended to every survey track: RTL | LAND | HOLD
+  default_formation: grid        # used when a multi-drone mission starts without a formation
+
+geofence:                        # initial fence; edit live in the PLAN tab
+  enabled: false
+  action: RTL                    # breach action: RTL | LAND | HOLD
+  lookahead_s: 2.0               # predictive breach: position + velocity * lookahead is checked too
+  clear_time: 2.0                # a breach episode ends after this long back inside [s]
+  max_altitude: null             # fence ceiling [m above home]; null = world ceiling only
+  inclusion: []                  # [[x, y], ...] (empty = none)
+  exclusions: []                 # list of no-fly polygons [[[x, y], ...], ...]
+
+alerts:                          # operator alerts panel (FLY view)
+  warning_ttl_s: 60              # unacknowledged WARNING alerts disappear after this long
+  info_ttl_s: 20                 # INFO alerts disappear after this long
+  acknowledged_ttl_s: 30         # acknowledged alerts stay visible (greyed) this long
+  dedup_window_s: 10             # a repeat within this window updates the existing alert
+  max_active: 50
+  max_alerts: 1000               # alert history kept for post-mission reports
+  critical_repeat_s: 8           # beep repeat period while a CRITICAL alert is unacknowledged
+
+communication:                 # GCS <-> drone radio link
+  enabled: true
+  range: 1200                  # hard link range from the GCS [m]
+  latency_ms: 50               # mean one-way latency
+  jitter_ms: 15                # latency standard deviation
+  packet_loss: 0.02            # base packet loss probability
+  edge_fraction: 0.8           # loss rises to 100 % between 0.8 x range and range
+  heartbeat_hz: 10
+  timeout_s: 1.5               # no heartbeat for this long -> COMM LOST
+  degraded_quality: 60         # link quality [%] below which the link is DEGRADED
+  failsafe_action: RTL         # RTL | LAND | HOLD after failsafe_timeout_s in COMM LOST
+  failsafe_timeout_s: 5.0
+  command_retries: 3
+  retry_interval_s: 0.25
+  gcs_height: 2.0              # antenna height above the home pad [m]
+
+sensors:                       # sensor noise + Kalman filter
+  enabled: true
+  control_source: estimate     # the autopilot flies on: estimate | truth
+  gps_rate_hz: 5
+  gps_noise_h: 1.0             # [m, 1 sigma]
+  gps_noise_v: 1.8
+  gps_drift: 1.5               # slowly wandering GPS bias [m, 1 sigma]
+  gps_drift_time_s: 120        # correlation time of the drift
+  baro_rate_hz: 20
+  baro_noise: 0.4
+  baro_drift: 0.5
+  compass_noise_deg: 2.0
+  compass_bias_deg: 1.0
+  accel_noise: 0.15            # [m/s^2]
+  gyro_noise_deg: 0.5          # [deg/s]
+  process_noise: 0.6           # Kalman filter acceleration noise density
+
+failures:                      # instructor failure injection
+  enabled: true
+  motor_partial_thrust: 0.45   # thrust left after a partial motor failure
+  default_gust_speed: 12.0     # [m/s]
+  default_gust_duration_s: 6.0
+  default_battery_drop: 30.0   # [% of capacity]
+
+hardware:                      # real / SITL vehicles in the same swarm (Stage 5)
+  # vehicles:                  # type: mavlink (pymavlink, ArduPilot/PX4) | mavsdk (native mavsdk>=4)
+  #   - {type: mavlink, url: "tcp:127.0.0.1:5760", name: SITL1}    # ArduPilot SITL instance 0
+  #   - {type: mavsdk, url: "udpin://0.0.0.0:14540", name: PX4}    # PX4 SITL
+  vehicles: []
+  heartbeat_timeout_s: 3.0     # no vehicle heartbeat for this long -> COMM LOST
+  setpoint_rate_hz: 10.0       # velocity setpoints while in a formation / offboard
+
+security:                      # Operator vs Observer login + command audit log
+  enabled: true
+  token_ttl_s: 43200           # session length [s]
+  audit_log: audit.log         # JSON Lines under logging.directory
+  max_login_failures: 5        # then locked out for lockout_s
+  lockout_s: 60
+  # Demo accounts: operator/operator and observer/observer. CHANGE THEM:
+  #   python -m backend.security hash-password
+  users:
+    - username: operator
+      role: operator
+      password_hash: "pbkdf2_sha256$200000$V11fQNi_f48ep7Q-yHMpMA$kfW4iVwffoza9eICdnyb8Juu3C8eR6V9ecVyqD64us8"
+    - username: observer
+      role: observer
+      password_hash: "pbkdf2_sha256$200000$6RWiVS27tmwPzuNWuwn2ww$g_8iQLvRns-96eN-_TyWUWd1h4KvszXDHwai1DmuHrA"
+
+replay:                        # REPLAY tab: recorded runs in logs/<run_id>
+  chunk_s: 20                  # seconds of frames per request
+  cache_runs: 2                # parsed runs kept in memory
+  max_events: 2000             # event markers on the scrubber
+
+report:                        # one-click post-mission report (HTML / PDF)
+  title: Post-mission report
+  logo: frontend/assets/gandiv-logo.png   # wordmark when the file is missing
+  max_track_points: 600        # per drone in the flight-path plot
+  max_timeline_events: 200
+
+wind:
+  enabled: true
+  speed: 5
+  direction: 90                # wind comes FROM the east
+  gust_strength: 1.5
+  gust_frequency: 0.2
+  vertical_gust_ratio: 0.3
+  shear: true
+
+telemetry:
+  rate_hz: 20
+  paused_rate_hz: 2
+  event_history: 500
+
+logging:
+  level: INFO
+  directory: logs
+  console: true
+  record_telemetry: true
+  telemetry_record_rate_hz: 5
+
+server:
+  host: 127.0.0.1
+  port: 8000

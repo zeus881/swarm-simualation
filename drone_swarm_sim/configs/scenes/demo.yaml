@@ -1,0 +1,25 @@
+# Demo obstacle scene for the Gandiv Swarm GCS (environment.scene_file).
+# Positions: local ENU metres from the origin (x = East, y = North). Heights: metres above the terrain.
+# Buildings are boxes (width along the rotated x axis, depth along y, rotation CCW in degrees);
+# towers and trees are cylinders; a forest scatters trees in a disc (seeded, reproducible).
+# Everything is kept at least 200 m from the home base so the landing pads stay clear.
+
+obstacles:
+  # --- a small industrial block north-east of home
+  - {type: building, name: Hangar A, x: 260, y: 220, width: 70, depth: 40, height: 22, rotation: 12}
+  - {type: building, name: Hangar B, x: 350, y: 170, width: 45, depth: 45, height: 30, rotation: 12}
+  - {type: building, name: Control Block, x: 300, y: 320, width: 30, depth: 18, height: 45, rotation: -8}
+  - {type: tower, name: Radio Mast, x: 420, y: 300, radius: 3, height: 90}
+
+  # --- towers and a line of trees to the west
+  - {type: tower, name: Water Tower, x: -320, y: 140, radius: 9, height: 38}
+  - {type: tower, name: Wind Turbine, x: -420, y: -60, radius: 4, height: 110}
+  - {type: tree, name: Poplar 1, x: -250, y: -220, radius: 3, height: 18}
+  - {type: tree, name: Poplar 2, x: -235, y: -245, radius: 3, height: 19}
+  - {type: tree, name: Poplar 3, x: -220, y: -270, radius: 3, height: 17}
+
+  # --- woodland to the south-east
+  - {type: forest, name: South Wood, x: 280, y: -320, radius: 90, count: 35, height: [9, 18], tree_radius: [2.5, 5], seed: 4}
+
+  # --- a tall building south-west (taller than the default RTL altitude)
+  - {type: building, name: Tower Block, x: -260, y: -380, width: 35, depth: 35, height: 75, rotation: 0}

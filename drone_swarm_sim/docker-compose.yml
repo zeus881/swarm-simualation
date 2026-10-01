@@ -1,0 +1,13 @@
+services:
+  swarm-sim:
+    build: .
+    image: drone-swarm-sim:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs                  # recordings and simulation.log on the host
+      - ./data:/app/data                  # saved missions (mission_*.json)
+      - ./configs:/app/configs:ro         # edit configs/simulation.yaml without rebuilding
+    environment:
+      SWARM_CONFIG: /app/configs/simulation.yaml
+    restart: unless-stopped

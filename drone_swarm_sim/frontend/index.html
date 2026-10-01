@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GANDIV | Swarm GCS</title>
+  <link rel="icon" type="image/png" href="assets/gandiv-logo.png">
+  <link rel="stylesheet" href="styles/main.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+<!-- Inline icon sprite (offline; no icon fonts or CDNs). -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 16 16"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 16 16"><path d="M8 2.5a5.5 5.5 0 1 1-5.2 3.7l1.4.5A4 4 0 1 0 8 4v2L4.8 3.3 8 .5z"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 16 16"><path d="M8 3a6 6 0 0 0-6 6c0 1.3.4 2.5 1.1 3.5h9.8A6 6 0 0 0 8 3zm0 1.5a4.5 4.5 0 0 1 4.3 6.5H3.7A4.5 4.5 0 0 1 8 4.5zm2.9 1.4L8.6 8.3a1.3 1.3 0 1 0 1 1l2.3-2.4z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 16 16"><path d="M8 1.5 3 6.5h3.3V11h3.4V6.5H13zM3 13h10v1.5H3z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 16 16"><path d="M8 11.5 13 6.5H9.7V2H6.3v4.5H3zM3 13h10v1.5H3z"/></symbol>
+  <symbol id="i-hover" viewBox="0 0 16 16"><path d="M1.5 5h13v1.5h-13zM3 9.5h10V11H3zM6 2h4v1.5H6zM6 12.5h4V14H6z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 16 16"><path d="M8 1.8 1.5 7.3l1 1.1L3.5 7.6V14h3.5v-3.5h2V14h3.5V7.6l1 .8 1-1.1z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 16 16"><path d="M5.2 1.5h5.6l3.7 3.7v5.6l-3.7 3.7H5.2l-3.7-3.7V5.2zM7.2 4v5h1.6V4zm0 6.2v1.6h1.6v-1.6z"/></symbol>
+  <symbol id="i-formation" viewBox="0 0 16 16"><circle cx="8" cy="3" r="1.6"/><circle cx="5" cy="7" r="1.6"/><circle cx="11" cy="7" r="1.6"/><circle cx="2" cy="11" r="1.6"/><circle cx="14" cy="11" r="1.6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 16 16"><path d="M7.2 2.5h1.6v4.7h4.7v1.6H8.8v4.7H7.2V8.8H2.5V7.2h4.7z"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 16 16"><path d="M2.5 7.2h11v1.6h-11z"/></symbol>
+  <symbol id="i-all" viewBox="0 0 16 16"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></symbol>
+  <symbol id="i-none" viewBox="0 0 16 16"><path d="M2 2h5v5H2zm1.3 1.3v2.4h2.4V3.3zM9 2h5v5H9zm1.3 1.3v2.4h2.4V3.3zM2 9h5v5H2zm1.3 1.3v2.4h2.4v-2.4zM9 9h5v5H9zm1.3 1.3v2.4h2.4v-2.4z"/></symbol>
+  <symbol id="i-follow" viewBox="0 0 16 16"><path d="M7.2 1h1.6v2.1a5 5 0 0 1 4.1 4.1H15v1.6h-2.1a5 5 0 0 1-4.1 4.1V15H7.2v-2.1a5 5 0 0 1-4.1-4.1H1V7.2h2.1a5 5 0 0 1 4.1-4.1zM8 4.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8zm0 1.9a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+  <symbol id="i-top" viewBox="0 0 16 16"><path d="M1.5 2.5h13v11h-13zM3 4v8h10V4zm4.2 1.5h1.6v1.7h1.7v1.6H8.8v1.7H7.2V8.8H5.5V7.2h1.7z"/></symbol>
+  <symbol id="i-view" viewBox="0 0 16 16"><path d="M8 3.5c3.4 0 5.9 2.6 6.9 4.5-1 1.9-3.5 4.5-6.9 4.5S2.1 9.9 1.1 8C2.1 6.1 4.6 3.5 8 3.5zm0 1.6a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8z"/></symbol>
+  <symbol id="i-max" viewBox="0 0 16 16"><path d="M1.5 1.5h5V3H3v3.5H1.5zM9.5 1.5h5v5H13V3H9.5zM1.5 9.5H3V13h3.5v1.5h-5zM13 9.5h1.5v5h-5V13H13z"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 16 16"><path d="M10.3 2.5 11.5 3.7 7.2 8l4.3 4.3-1.2 1.2L4.8 8z"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 16 16"><path d="M5.7 2.5 4.5 3.7 8.8 8l-4.3 4.3 1.2 1.2L11.2 8z"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 16 16"><path d="M2.5 5.7 3.7 4.5 8 8.8l4.3-4.3 1.2 1.2L8 11.2z"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 16 16"><path d="M1 11.5 11.5 1 15 4.5 4.5 15zm2.1 0 1.4 1.4 1.1-1.1-1-1 .7-.7 1 1 1-1-1.4-1.4.7-.7 1.4 1.4 1-1-1-1 .7-.7 1 1 1-1-1.4-1.4.7-.7 1.4 1.4 1.1-1.1-1.4-1.4z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 16 16"><path d="M2 2h7v1.5H3.5v9H9V14H2zm8.4 2.6L14 8l-3.6 3.4-1-1.1 1.8-1.5H6V7.2h5.2L9.4 5.7z"/></symbol>
+  <symbol id="i-report" viewBox="0 0 16 16"><path d="M3 1.5h7l3 3V14.5H3zm1.5 1.5v10h7V5.2H9.5V3zm1.5 5h4v1.2H6zm0 2.2h4v1.2H6z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 16 16"><path d="M8 3v10L1.5 8zm6.5 0v10L8 8z"/></symbol>
+  <symbol id="i-fwd" viewBox="0 0 16 16"><path d="M8 3v10l6.5-5zM1.5 3v10L8 8z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 16 16"><path d="M8 1.5a4.5 4.5 0 0 0-4.5 4.5v3L2 11.5v1h12v-1L12.5 9V6A4.5 4.5 0 0 0 8 1.5zM6.3 13.5a1.8 1.8 0 0 0 3.4 0z"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <!-- ============================================================ header -->
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" id="brand-logo" src="assets/gandiv-logo.png" alt="GANDIV logo" height="40">
+      <div class="brand-text">
+        <div class="brand-title"><b>GANDIV</b><span class="sep">|</span>Swarm GCS</div>
+        <div class="brand-sub">SWARM CONTROL CENTER</div>
+      </div>
+    </div>
+
+    <div class="link-state">
+      <div class="pill" id="conn-pill"><span class="dot"></span><span id="conn-text">CONNECTING</span></div>
+      <div class="pill state" id="state-pill">—</div>
+    </div>
+
+    <nav class="view-tabs" role="tablist" aria-label="Views">
+      <button role="tab" class="view-tab" id="tab-fly" aria-selected="true" aria-controls="viewport" data-tip="Live 3D flight view — F1">FLY</button>
+      <button role="tab" class="view-tab" id="tab-plan" aria-selected="false" aria-controls="plan-view" data-tip="Mission planner — F2">PLAN</button>
+      <button role="tab" class="view-tab" id="tab-replay" aria-selected="false" aria-controls="replay-bar" data-tip="Replay a recorded run — F3">REPLAY</button>
+    </nav>
+
+    <div class="tiles" role="status" aria-label="Simulation telemetry">
+      <div class="tile t-time"><label>Sim time</label><span id="m-time">00:00.0</span></div>
+      <div class="tile"><label>Sim rate</label><span id="m-rate">—</span></div>
+      <div class="tile"><label>Step time</label><span id="m-step">—</span></div>
+      <div class="tile t-narrow"><label>FPS</label><span id="m-fps">—</span></div>
+      <div class="tile"><label>Latency</label><span id="m-latency">—</span></div>
+      <div class="tile t-narrow"><label>Airborne</label><span id="m-airborne">—</span></div>
+      <div class="tile"><label>Min separation</label><span id="m-minsep">—</span></div>
+    </div>
+
+    <div class="user-chip" id="user-chip" hidden>
+      <div class="user-text"><b id="user-name">—</b><span id="user-role">—</span></div>
+      <button class="icon-btn" id="btn-logout" data-tip="Log out">
+        <svg class="ico"><use href="#i-logout"/></svg>
+      </button>
+    </div>
+
+    <button class="btn estop" id="btn-estop" data-tip="Emergency Stop — X (confirms when no drone is selected)" aria-keyshortcuts="X">
+      <svg class="ico"><use href="#i-stop"/></svg><span>EMERGENCY STOP</span>
+    </button>
+  </header>
+
+  <!-- ============================================================ left rail -->
+  <aside class="rail rail-left" id="left-rail" aria-label="Command rail">
+    <div class="rail-head">
+      <span class="rail-title">Command</span>
+      <button class="icon-btn" id="toggle-left" data-tip="Collapse command rail" aria-expanded="true" aria-controls="left-rail-body">
+        <svg class="ico"><use href="#i-chev-l"/></svg>
+      </button>
+    </div>
+    <div class="rail-body" id="left-rail-body">
+      <section class="group target-group" data-section="target">
+        <h3 class="group-head">Command target</h3>
+        <div class="group-body">
+          <div id="target-label" class="target-label">ALL DRONES</div>
+          <div class="target-hint">Commands apply to the selection, or to all drones when none is selected.</div>
+          <div class="groups" id="groups" aria-label="Drone groups (keys 1-9 select)"></div>
+          <button class="btn sub" id="btn-save-group" data-tip="Save the selected drones as a named group (Alpha, Bravo…); keys 1–9 select groups">Save selection as group</button>
+        </div>
+      </section>
+
+      <section class="group" data-section="simulation">
+        <button class="group-head" aria-expanded="true">Simulation<svg class="ico chev"><use href="#i-chev-d"/></svg></button>
+        <div class="group-body">
+          <button class="btn main primary run-btn" id="btn-run" data-tip="Start / Pause — Space" aria-keyshortcuts="Space">
+            <svg class="ico"><use href="#i-play"/></svg><span class="lbl">Start</span><kbd>Space</kbd>
+          </button>
+          <div class="subs">
+            <button class="btn sub" id="btn-reset" data-tip="Reset simulation (new recorded run)"><svg class="ico"><use href="#i-reset"/></svg>Reset</button>
+            <button class="btn sub view-ok" id="btn-report" data-tip="Post-mission report of the current run (HTML; PDF from the REPLAY tab)"><svg class="ico"><use href="#i-report"/></svg>Report</button>
+            <div class="readout" id="sim-rate-readout" data-tip="Simulation rate — achieved / target. Set via simulation.simulation_rate and real_time_factor in configs/simulation.yaml" tabindex="0">
+              <svg class="ico"><use href="#i-gauge"/></svg><span class="ro-label">Sim rate</span><span class="ro-val" id="sim-rate-val">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="group" data-section="flight">
+        <button class="group-head" aria-expanded="true">Flight<svg class="ico chev"><use href="#i-chev-d"/></svg></button>
+        <div class="group-body">
+          <button class="btn main primary" id="btn-takeoff" data-tip="Takeoff — T" aria-keyshortcuts="T">
+            <svg class="ico"><use href="#i-up"/></svg><span class="lbl">Takeoff</span><kbd>T</kbd>
+          </button>
+          <div class="subs grid2">
+            <button class="btn sub" id="btn-hover" data-tip="Hover — hold current position"><svg class="ico"><use href="#i-hover"/></svg>Hover</button>
+            <button class="btn sub" id="btn-land" data-tip="Land — L" aria-keyshortcuts="L"><svg class="ico"><use href="#i-down"/></svg>Land<kbd>L</kbd></button>
+            <button class="btn sub span2" id="btn-rth" data-tip="Return Home — H" aria-keyshortcuts="H"><svg class="ico"><use href="#i-home"/></svg>Return Home<kbd>H</kbd></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="group" data-section="swarm">
+        <button class="group-head" aria-expanded="true">Swarm<svg class="ico chev"><use href="#i-chev-d"/></svg></button>
+        <div class="group-body">
+          <button class="btn main primary" id="btn-formation" data-tip="Fly the chosen formation with the command target (airborne drones)">
+            <svg class="ico"><use href="#i-formation"/></svg><span class="lbl">Formation</span><span class="soon" id="formation-badge"></span>
+          </button>
+          <div class="formation-params">
+            <label>Shape
+              <select id="formation-shape" aria-label="Formation shape">
+                <option value="v">V</option>
+                <option value="line">Line</option>
+                <option value="column">Column</option>
+                <option value="wedge">Wedge</option>
+                <option value="diamond">Diamond</option>
+                <option value="grid">Grid</option>
+                <option value="circle">Circle</option>
+                <option value="custom">Custom (offsets)</option>
+              </select>
+            </label>
+            <label>Spacing<span class="inp"><input type="number" id="formation-spacing" value="15" min="6" max="200" step="1"><i>m</i></span></label>
+            <label data-tip="Fixed formation heading. Leave empty to face the direction of travel.">Heading<span class="inp"><input type="number" id="formation-heading" placeholder="travel" min="0" max="359" step="1"><i>°</i></span></label>
+            <label data-tip="Stack slots over several altitude layers">Layers<span class="inp"><input type="number" id="formation-layers" value="1" min="1" max="10" step="1"><i>#</i></span></label>
+            <label class="span2" data-tip="Vertical distance between altitude layers">Layer gap<span class="inp"><input type="number" id="formation-layer-gap" value="6" min="4" max="100" step="1"><i>m</i></span></label>
+            <label class="span2">Reference
+              <select id="formation-reference" aria-label="Formation reference">
+                <option value="virtual">Virtual point (Shift+click moves it)</option>
+                <option value="leader">Leader = first selected drone (auto-promotes)</option>
+              </select>
+            </label>
+            <details class="adv span2" id="custom-box">
+              <summary>Custom offsets</summary>
+              <textarea id="custom-offsets" rows="5" spellcheck="false" aria-label="Custom formation offsets"
+                        placeholder="forward, left, up  (m, one slot per line)"></textarea>
+              <div class="adv-row">
+                <button class="btn sub" id="btn-custom-from-sel" data-tip="Use the current positions of the selected drones as the custom shape">From selection</button>
+                <button class="btn sub" id="btn-custom-apply" data-tip="Fly the custom shape with these offsets">Fly custom</button>
+              </div>
+            </details>
+          </div>
+          <div class="subs grid2">
+            <button class="btn sub" id="btn-flock" data-tip="Reynolds flocking with the command target"><svg class="ico"><use href="#i-formation"/></svg>Flock</button>
+            <button class="btn sub" id="btn-release" data-tip="End formation / flocking — members hold position"><svg class="ico"><use href="#i-hover"/></svg>Release</button>
+            <button class="btn sub" id="btn-add" data-tip="Add a drone"><svg class="ico"><use href="#i-plus"/></svg>Drone</button>
+            <button class="btn sub" id="btn-remove" data-tip="Remove selected drones (or the last drone)"><svg class="ico"><use href="#i-minus"/></svg>Drone</button>
+            <button class="btn sub" id="btn-select-all" data-tip="Select all drones"><svg class="ico"><use href="#i-all"/></svg>Select All</button>
+            <button class="btn sub" id="btn-select-none" data-tip="Clear selection — Esc" aria-keyshortcuts="Escape"><svg class="ico"><use href="#i-none"/></svg>Select None</button>
+          </div>
+          <div class="toggles">
+            <label class="toggle" data-tip="ORCA velocity obstacles (or potential field) plus a hard minimum-separation filter for every airborne drone"><input type="checkbox" id="opt-avoidance" checked><span class="t-name">Collision avoidance</span><span class="t-state"></span></label>
+            <label class="select-row">Method
+              <select id="avoidance-method" aria-label="Collision avoidance method">
+                <option value="orca">ORCA (velocity obstacles)</option>
+                <option value="potential_field">Potential field</option>
+              </select>
+            </label>
+          </div>
+          <details class="adv" id="flock-box">
+            <summary>Flocking weights</summary>
+            <div class="weights">
+              <label class="slider-row">Separation <input type="range" id="w-separation" min="0" max="5" step="0.1" value="1.6"><span id="w-separation-val">1.6</span></label>
+              <label class="slider-row">Alignment <input type="range" id="w-alignment" min="0" max="5" step="0.1" value="0.6"><span id="w-alignment-val">0.6</span></label>
+              <label class="slider-row">Cohesion <input type="range" id="w-cohesion" min="0" max="5" step="0.1" value="0.8"><span id="w-cohesion-val">0.8</span></label>
+              <label class="slider-row">Goal <input type="range" id="w-goal" min="0" max="5" step="0.1" value="1.0"><span id="w-goal-val">1.0</span></label>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="group instructor-group" data-section="instructor">
+        <button class="group-head" aria-expanded="true">Instructor<svg class="ico chev"><use href="#i-chev-d"/></svg></button>
+        <div class="group-body">
+          <button class="btn main inject-main" id="btn-inject" data-tip="Inject the failure into the selected drones (training)">
+            <svg class="ico"><use href="#i-stop"/></svg><span class="lbl">Inject failure</span>
+          </button>
+          <div class="formation-params">
+            <label class="span2">Failure
+              <select id="fi-type" aria-label="Failure type">
+                <option value="motor">Motor failure</option>
+                <option value="gps_loss">GPS loss</option>
+                <option value="comm_loss">Comm loss</option>
+                <option value="battery_sag">Battery sag</option>
+                <option value="wind_gust">Wind gust</option>
+              </select>
+            </label>
+            <label data-fi="motor">Severity<select id="fi-severity"><option value="partial">Partial</option><option value="total">Total (crash)</option></select></label>
+            <label data-fi="gps_loss comm_loss wind_gust" data-tip="Empty = until cleared (gust: default duration)">Duration<span class="inp"><input type="number" id="fi-duration" placeholder="∞" min="1" max="3600" step="1"><i>s</i></span></label>
+            <label data-fi="battery_sag">Drop<span class="inp"><input type="number" id="fi-drop" value="30" min="1" max="100" step="1"><i>%</i></span></label>
+            <label data-fi="wind_gust">Speed<span class="inp"><input type="number" id="fi-speed" value="12" min="1" max="60" step="1"><i>m/s</i></span></label>
+            <label data-fi="wind_gust">From<span class="inp"><input type="number" id="fi-direction" placeholder="wind" min="0" max="359" step="1"><i>°</i></span></label>
+          </div>
+          <div class="active-failures" id="active-failures"></div>
+          <div class="subs">
+            <button class="btn sub" id="btn-clear-failures" data-tip="End every injected failure"><svg class="ico"><use href="#i-reset"/></svg>Clear all failures</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="group" data-section="view">
+        <button class="group-head" aria-expanded="true">View<svg class="ico chev"><use href="#i-chev-d"/></svg></button>
+        <div class="group-body">
+          <div class="cam-presets" role="radiogroup" aria-label="Camera preset">
+            <button role="radio" class="cam-btn" data-cam="free" aria-checked="true" data-tip="Free camera: drag to orbit, wheel to zoom">
+              <svg class="ico"><use href="#i-view"/></svg><span>Free</span></button>
+            <button role="radio" class="cam-btn" data-cam="top" aria-checked="false" data-tip="Top-down view over the swarm">
+              <svg class="ico"><use href="#i-top"/></svg><span>Top</span></button>
+            <button role="radio" class="cam-btn" data-cam="chase" aria-checked="false" data-tip="Chase the selected drone from behind — F" aria-keyshortcuts="F">
+              <svg class="ico"><use href="#i-follow"/></svg><span>Chase</span></button>
+            <button role="radio" class="cam-btn" data-cam="orbit" aria-checked="false" data-tip="Slowly orbit the swarm centre">
+              <svg class="ico"><use href="#i-reset"/></svg><span>Orbit</span></button>
+          </div>
+          <div class="toggles">
+            <label class="toggle" data-tip="Head-up display for the selected drone"><input type="checkbox" id="opt-hud" checked><span class="t-name">HUD</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-minimap" checked><span class="t-name">Minimap</span><span class="t-state"></span></label>
+            <label class="toggle" data-tip="Show the navigation-filter estimate (ghost) against the true position"><input type="checkbox" id="opt-estimate"><span class="t-name">Estimated position</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-obstacles" checked><span class="t-name">Obstacles &amp; terrain</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-trails" checked><span class="t-name">Trails</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-targets" checked><span class="t-name">Flight paths</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-links"><span class="t-name">Neighbour links</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-safety"><span class="t-name">Safety radius</span><span class="t-state"></span></label>
+            <label class="toggle"><input type="checkbox" id="opt-labels" checked><span class="t-name">Labels</span><span class="t-state"></span></label>
+            <label class="slider-row">Drone size <input type="range" id="opt-size" min="0.5" max="4" step="0.25" value="1"><span id="opt-size-val">1×</span></label>
+          </div>
+          <div class="subs">
+            <button class="btn sub" id="btn-view-reset" data-tip="Reset camera view"><svg class="ico"><use href="#i-view"/></svg>Reset View</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="group fleet-group" data-section="status">
+        <button class="group-head" aria-expanded="true">Drone status <span class="count" id="fleet-count">0</span><svg class="ico chev"><use href="#i-chev-d"/></svg></button>
+        <div class="group-body">
+          <div class="fleet-header"><span>ID</span><span>Status</span><span>Mode</span><span class="num">Alt</span><span class="num">Batt</span></div>
+          <div class="fleet-list" id="fleet-list"></div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- ============================================================ 3D view -->
+  <main class="viewport" id="viewport" aria-label="3D swarm view">
+    <div id="scene"></div>
+
+    <img class="vp-watermark" id="vp-watermark" src="assets/gandiv-logo.png" alt="" hidden>
+
+    <div class="vp-overlay vp-tools">
+      <button class="icon-btn dark" id="btn-maximise" aria-pressed="false" data-tip="Maximise View — M" aria-keyshortcuts="M">
+        <svg class="ico"><use href="#i-max"/></svg>
+      </button>
+      <button class="icon-btn dark" id="btn-measure" aria-pressed="false" data-tip="Measure distance and bearing: click two points on the ground — R" aria-keyshortcuts="R">
+        <svg class="ico"><use href="#i-ruler"/></svg>
+      </button>
+      <span class="vp-hint" id="vp-hint">Click: select · Ctrl+click: multi-select · Shift+click ground: fly to</span>
+    </div>
+
+    <div class="alert-banner" id="alert-banner" role="alert" hidden>
+      <svg class="ico"><use href="#i-stop"/></svg>
+      <div class="ab-text"><b id="ab-title"></b><span id="ab-msg"></span></div>
+      <span class="ab-count" id="ab-count"></span>
+      <button class="btn ab-ack" id="ab-ack" data-tip="Acknowledge this critical alert">ACK</button>
+    </div>
+
+    <canvas class="hud" id="hud" aria-label="Head-up display of the selected drone" hidden></canvas>
+    <canvas class="vp-overlay minimap" id="minimap" aria-label="Minimap: click to move the camera"></canvas>
+    <div class="vp-overlay measure-readout" id="measure-readout" hidden></div>
+
+    <div class="vp-overlay wind">
+      <div class="vp-title">Wind</div>
+      <svg viewBox="-50 -50 100 100" class="compass" aria-hidden="true">
+        <circle r="44" class="ring"/>
+        <path class="ticks" d="M0 -44v7M44 0h-7M0 44v-7M-44 0h7"/>
+        <text y="-28" class="cardinal">N</text><text x="30" y="1" class="cardinal">E</text>
+        <text y="31" class="cardinal">S</text><text x="-30" y="1" class="cardinal">W</text>
+        <g id="wind-arrow"><path d="M0 -24 L6 -8 L2 -9.5 L2 24 L-2 24 L-2 -9.5 L-6 -8 Z"/></g>
+      </svg>
+      <div id="wind-text" class="wind-text">—</div>
+    </div>
+
+    <div class="vp-overlay legend" id="legend" aria-label="Drone state legend"></div>
+
+    <!-- PLAN: top-down mission planner (replaces the 3D view while the PLAN tab is active) -->
+    <div class="plan-view" id="plan-view" hidden>
+      <canvas id="plan-canvas" aria-label="Mission planning map" tabindex="0"></canvas>
+      <div class="vp-overlay plan-tools" role="toolbar" aria-label="Planning tools">
+        <button class="tool-btn" data-tool="select" aria-pressed="true" data-tip="Select / move waypoints, drag the map to pan — V">Select</button>
+        <button class="tool-btn" data-tool="waypoint" aria-pressed="false" data-tip="Click to add waypoints — W">Waypoint</button>
+        <button class="tool-btn" data-tool="survey" aria-pressed="false" data-tip="Draw a survey polygon; click the first point or double-click to close — S">Survey</button>
+        <button class="tool-btn" data-tool="fence" aria-pressed="false" data-tip="Draw the inclusion geofence polygon">Fence</button>
+        <button class="tool-btn" data-tool="nfz" aria-pressed="false" data-tip="Draw a no-fly (exclusion) zone">No-fly</button>
+        <button class="tool-btn" data-tool="measure" aria-pressed="false" data-tip="Measure distance and bearing — click two points">Measure</button>
+        <span class="tool-sep"></span>
+        <button class="tool-btn" id="plan-fit" data-tip="Zoom to the mission (or the world)">Fit</button>
+      </div>
+      <div class="vp-overlay plan-readout" id="plan-readout">—</div>
+      <div class="vp-overlay plan-hint" id="plan-hint">Waypoint tool: click to add · drag to move · right-click to delete or insert</div>
+      <div class="ctx-menu" id="plan-menu" role="menu" hidden></div>
+    </div>
+
+    <!-- REPLAY: transport bar over the 3D view (the view itself shows the recorded frames) -->
+    <div class="vp-overlay replay-bar" id="replay-bar" role="group" aria-label="Mission replay" hidden>
+      <div class="rp-row">
+        <span class="rp-badge">REPLAY</span>
+        <select id="rp-run" aria-label="Recorded run"></select>
+        <button class="btn pb" id="rp-refresh" data-tip="Refresh the list of recorded runs">↻</button>
+        <span class="rp-sep"></span>
+        <button class="btn pb" id="rp-back" data-tip="Back 10 s (← 5 s)"><svg class="ico"><use href="#i-back"/></svg></button>
+        <button class="btn pb primary" id="rp-play" data-tip="Play replay — Space" aria-pressed="false"><svg class="ico"><use href="#i-play"/></svg></button>
+        <button class="btn pb" id="rp-fwd" data-tip="Forward 10 s (→ 5 s)"><svg class="ico"><use href="#i-fwd"/></svg></button>
+        <label class="rp-speed">Speed<select id="rp-speed" aria-label="Replay speed"></select></label>
+        <span class="rp-clock"><span id="rp-time">00:00.0</span> / <span id="rp-total">00:00.0</span></span>
+        <span class="spacer"></span>
+        <span class="rp-count" id="rp-count"></span>
+        <button class="btn pb" id="rp-report-html" data-tip="Open the post-mission report (HTML)"><svg class="ico"><use href="#i-report"/></svg>Report</button>
+        <button class="btn pb" id="rp-report-pdf" data-tip="Download the post-mission report as PDF">PDF</button>
+      </div>
+      <div class="rp-track">
+        <div class="rp-markers" id="rp-markers" aria-label="Event markers (click to jump)"></div>
+        <input type="range" id="rp-scrub" min="0" max="1" step="0.05" value="0" aria-label="Replay position">
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <img class="overlay-logo" src="assets/gandiv-logo.png" alt="">
+      <div class="spinner"></div>
+      <div id="overlay-text">Connecting to simulation…</div>
+    </div>
+  </main>
+
+  <!-- ============================================================ right rail -->
+  <aside class="rail rail-right" id="right-rail" aria-label="Inspector and mission">
+    <div class="rail-head">
+      <button class="icon-btn" id="toggle-right" data-tip="Collapse inspector rail" aria-expanded="true" aria-controls="right-rail-body">
+        <svg class="ico"><use href="#i-chev-r"/></svg>
+      </button>
+      <span class="rail-title" id="right-rail-title">Inspector</span>
+      <span class="count" id="inspector-name">—</span>
+    </div>
+    <div class="rail-body" id="right-rail-body">
+      <!-- ============== PLAN editor (visible in the PLAN tab) -->
+      <div id="plan-panel" class="plan-panel" hidden>
+        <section class="plan-section">
+          <h3 class="panel-title">Mission</h3>
+          <div class="field-grid">
+            <label class="span2">Name<span class="inp"><input id="pm-name" type="text" maxlength="80" value="New mission" aria-label="Mission name"></span></label>
+            <label class="span2">Assign to<select id="pm-assign" aria-label="Assign mission to"></select></label>
+            <label class="span2" data-tip="Relative: altitudes above home. AGL: above the terrain under the drone (terrain following).">Altitude mode
+              <select id="pm-altmode" aria-label="Altitude mode"><option value="relative">Relative to home</option><option value="agl">Above ground (AGL, terrain following)</option></select>
+            </label>
+          </div>
+          <div class="toggles compact">
+            <label class="toggle" data-tip="Several drones fly the waypoints in their current formation (a split survey always flies one track per drone)"><input type="checkbox" id="pm-formation" checked><span class="t-name">Fly in formation</span><span class="t-state"></span></label>
+            <label class="toggle" data-tip="Also apply the fence drawn here when the mission starts"><input type="checkbox" id="pm-apply-fence"><span class="t-name">Apply fence on upload</span><span class="t-state"></span></label>
+          </div>
+          <button class="btn main primary" id="pm-fly" data-tip="Validate, then upload and fly the mission">
+            <svg class="ico"><use href="#i-play"/></svg><span class="lbl">Upload &amp; Fly</span>
+          </button>
+          <div class="subs grid2">
+            <button class="btn sub" id="pm-validate" data-tip="Check fence, altitude and battery before upload">Validate</button>
+            <button class="btn sub" id="pm-abort" data-tip="Abort the running mission (drones hold)">Abort</button>
+            <button class="btn sub" id="pm-pause" data-tip="Pause the running mission (drones hold)">Pause</button>
+            <button class="btn sub" id="pm-resume" data-tip="Resume a paused mission">Resume</button>
+          </div>
+          <div class="run-status" id="pm-status" hidden></div>
+          <div class="report" id="pm-report" hidden></div>
+        </section>
+
+        <section class="plan-section">
+          <h3 class="panel-title">Waypoints <span class="count" id="pm-count">0</span></h3>
+          <div class="track-tabs" id="pm-tracks" hidden></div>
+          <div class="wp-head"><span>#</span><span>Action</span><span>Alt m</span><span>m/s</span><span>Hold s</span><span></span></div>
+          <div class="wp-table" id="pm-wps"><div class="empty">Pick the Waypoint tool and click the map.</div></div>
+          <div class="subs grid2">
+            <button class="btn sub" id="pm-reverse" data-tip="Reverse the waypoint order">Reverse</button>
+            <button class="btn sub" id="pm-clear" data-tip="Remove all waypoints">Clear</button>
+          </div>
+        </section>
+
+        <section class="plan-section" id="pm-survey-box">
+          <h3 class="panel-title">Area survey</h3>
+          <div class="survey-hint" id="sv-hint">Draw a polygon with the Survey tool.</div>
+          <div class="field-grid">
+            <label>Altitude<span class="inp"><input type="number" id="sv-alt" value="30" min="2" max="300" step="1"><i>m</i></span></label>
+            <label>Speed<span class="inp"><input type="number" id="sv-speed" value="8" min="1" max="15" step="0.5"><i>m/s</i></span></label>
+            <label>Drones<span class="inp"><input type="number" id="sv-drones" value="1" min="1" max="50" step="1"><i>#</i></span></label>
+            <label>Overlap<span class="inp"><input type="number" id="sv-overlap" value="70" min="0" max="95" step="5"><i>%</i></span></label>
+            <label data-tip="Leave empty to derive it from the overlap and the camera field of view">Spacing<span class="inp"><input type="number" id="sv-spacing" placeholder="auto" min="1" max="500" step="1"><i>m</i></span></label>
+            <label data-tip="Sweep direction (compass). Empty = along the longest edge">Angle<span class="inp"><input type="number" id="sv-angle" placeholder="auto" min="0" max="359" step="1"><i>°</i></span></label>
+            <label class="span2">Finish<select id="sv-finish"><option value="RTL">Return to launch</option><option value="LAND">Land at the end</option><option value="HOLD">Hold at the end</option></select></label>
+          </div>
+          <div class="subs grid2">
+            <button class="btn sub" id="sv-generate" data-tip="Generate the lawnmower pattern split between the drones">Generate</button>
+            <button class="btn sub" id="sv-clear" data-tip="Remove the survey polygon">Clear area</button>
+          </div>
+          <div class="survey-stats" id="sv-stats"></div>
+        </section>
+
+        <section class="plan-section">
+          <h3 class="panel-title">Geofence <span class="badge" id="gf-dirty" hidden>UNAPPLIED</span></h3>
+          <div class="toggles compact">
+            <label class="toggle"><input type="checkbox" id="gf-enabled"><span class="t-name">Fence enabled</span><span class="t-state"></span></label>
+          </div>
+          <div class="field-grid">
+            <label>Breach action<select id="gf-action"><option value="RTL">RTL</option><option value="LAND">LAND</option><option value="HOLD">HOLD</option></select></label>
+            <label data-tip="Fence ceiling above home. Empty = world ceiling">Ceiling<span class="inp"><input type="number" id="gf-ceiling" placeholder="none" min="5" max="1000" step="1"><i>m</i></span></label>
+          </div>
+          <div class="zone-list" id="gf-zones"></div>
+          <div class="subs grid2">
+            <button class="btn sub" id="gf-apply" data-tip="Send the fence to the vehicles">Apply fence</button>
+            <button class="btn sub" id="gf-clear" data-tip="Remove the inclusion polygon and every no-fly zone">Clear fence</button>
+          </div>
+        </section>
+
+        <section class="plan-section">
+          <h3 class="panel-title">Files</h3>
+          <div class="field-grid">
+            <label class="span2">Library<select id="pm-library" aria-label="Saved missions"></select></label>
+          </div>
+          <div class="subs grid2">
+            <button class="btn sub" id="pm-load" data-tip="Load the selected mission_*.json">Load</button>
+            <button class="btn sub" id="pm-save" data-tip="Save to the mission library (schema-validated)">Save</button>
+            <button class="btn sub" id="pm-export-qgc" data-tip="Export QGC WPL 110 (.waypoints) for Mission Planner / QGroundControl">Export QGC</button>
+            <button class="btn sub" id="pm-download" data-tip="Download mission_*.json">Download</button>
+            <button class="btn sub span2" id="pm-import" data-tip="Open a .waypoints (QGC WPL 110) or mission_*.json file">Import file…</button>
+          </div>
+          <input type="file" id="pm-file" accept=".waypoints,.txt,.json,.mission" hidden>
+        </section>
+      </div>
+
+      <div id="fly-panel">
+      <section class="health" aria-label="Swarm health">
+        <h3 class="panel-title">Swarm health</h3>
+        <div class="health-states" id="health-states"></div>
+        <div class="kv-grid health-kv">
+          <div><label>Avg battery</label><span id="hl-avg">—</span></div>
+          <div><label>Min battery</label><span id="hl-min">—</span></div>
+          <div data-tip="Predicted flight time of the airborne swarm: when the first drone reaches its emergency threshold at the power it is drawing now"><label>Flight left</label><span id="hl-left">—</span></div>
+        </div>
+      </section>
+      <section class="inspector">
+        <div id="inspector" class="inspector-body"><div class="empty">Select a drone to inspect its telemetry.</div></div>
+        <div class="inspector-actions" id="inspector-actions" hidden>
+          <div class="subs grid4">
+            <button class="btn sub" data-cmd="takeoff" data-tip="Takeoff selected"><svg class="ico"><use href="#i-up"/></svg>Takeoff</button>
+            <button class="btn sub" data-cmd="hover" data-tip="Hover selected"><svg class="ico"><use href="#i-hover"/></svg>Hover</button>
+            <button class="btn sub" data-cmd="land" data-tip="Land selected"><svg class="ico"><use href="#i-down"/></svg>Land</button>
+            <button class="btn sub" data-cmd="return_to_home" data-tip="Return selected home"><svg class="ico"><use href="#i-home"/></svg>RTH</button>
+          </div>
+          <button class="btn main estop-main" data-cmd="emergency_stop" data-tip="Emergency stop selected drones">
+            <svg class="ico"><use href="#i-stop"/></svg><span class="lbl">E-Stop</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="mission">
+        <h3 class="panel-title">Mission</h3>
+        <div class="kv-grid">
+          <div><label>Mode</label><span id="ms-mode">BASIC SWARM</span></div>
+          <div><label>Status</label><span id="ms-status">—</span></div>
+          <div><label>Avoidance</label><span id="ms-avoidance">—</span></div>
+          <div class="wide"><label>Formation</label><span id="ms-formation">—</span></div>
+          <div><label>Avg battery</label><span id="ms-battery">—</span></div>
+          <div><label>Violations</label><span id="ms-violations">0</span></div>
+          <div><label>Collisions</label><span id="ms-collisions">0</span></div>
+          <div data-tip="Hard minimum separation (swarm.min_separation) and the number of breaches"><label>Hard floor</label><span id="ms-floor">—</span></div>
+          <div data-tip="Smallest distance ever measured between two airborne drones this run"><label>Lowest sep</label><span id="ms-lowest">—</span></div>
+          <div><label>Leader</label><span id="ms-leader">—</span></div>
+        </div>
+        <div class="param-grid">
+          <label>Takeoff alt<span class="inp"><input type="number" id="in-takeoff-alt" value="20" min="2" max="300" step="1"><i>m</i></span></label>
+          <label>Go-to alt<span class="inp"><input type="number" id="in-goto-alt" value="30" min="2" max="300" step="1"><i>m</i></span></label>
+          <label>Speed<span class="inp"><input type="number" id="in-goto-speed" value="10" min="1" max="15" step="0.5"><i>m/s</i></span></label>
+        </div>
+        <div class="run-status" id="fly-mission-status" hidden></div>
+      </section>
+      </div>
+    </div>
+  </aside>
+  <dialog class="confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <h3 id="confirm-title">Confirm</h3>
+      <div class="confirm-body" id="confirm-body"></div>
+      <div class="confirm-actions">
+        <button class="btn sub" value="cancel" id="confirm-cancel">Cancel</button>
+        <button class="btn main primary" value="ok" id="confirm-ok">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============================================================ bottom dock -->
+  <section class="dock" id="dock" aria-label="Event log and playback">
+    <div class="dock-resizer" id="dock-resizer" role="separator" aria-orientation="horizontal" aria-label="Resize dock" tabindex="0" data-tip="Drag to resize (↑/↓ keys)"></div>
+    <div class="dock-head">
+      <button class="icon-btn" id="toggle-dock" data-tip="Collapse dock" aria-expanded="true" aria-controls="event-log">
+        <svg class="ico"><use href="#i-chev-d"/></svg>
+      </button>
+      <div class="dock-tabs" role="tablist" aria-label="Dock">
+        <button role="tab" class="dock-tab" id="dtab-events" data-pane="events" aria-selected="true">Event log</button>
+        <button role="tab" class="dock-tab" id="dtab-alerts" data-pane="alerts" aria-selected="false">Alerts <span class="tab-badge" id="alert-badge" hidden>0</span></button>
+        <button role="tab" class="dock-tab" id="dtab-charts" data-pane="charts" aria-selected="false">Charts</button>
+        <button role="tab" class="dock-tab" id="dtab-audit" data-pane="audit" aria-selected="false" data-tip="Command audit log: who did what, when">Audit</button>
+      </div>
+      <label class="dock-filter" data-pane-tool="events">Filter
+        <select id="event-filter" aria-label="Event filter">
+          <option value="all">All events</option>
+          <option value="warn">Warnings &amp; critical</option>
+          <option value="COLLISION">Collisions</option>
+          <option value="COMMAND">Commands</option>
+          <option value="MISSION">Mission</option>
+          <option value="DRONE">Drone</option>
+        </select>
+      </label>
+      <div class="dock-tools" data-pane-tool="alerts" hidden>
+        <label class="toggle mini" data-tip="Beep on CRITICAL alerts (repeats until acknowledged)"><input type="checkbox" id="opt-beep" checked><span class="t-name">Audio</span><span class="t-state"></span></label>
+        <button class="btn pb" id="btn-ack-all" data-tip="Acknowledge every alert">Ack all</button>
+      </div>
+      <div class="dock-tools" data-pane-tool="charts" hidden>
+        <span class="chart-legend" id="chart-legend"></span>
+      </div>
+      <div class="spacer"></div>
+      <div class="playback" role="group" aria-label="Playback">
+        <button class="btn pb run-btn" id="btn-run-dock" data-tip="Start / Pause — Space" aria-keyshortcuts="Space">
+          <svg class="ico"><use href="#i-play"/></svg><span class="lbl">Start</span>
+        </button>
+        <button class="btn pb" id="btn-reset-dock" data-tip="Reset simulation"><svg class="ico"><use href="#i-reset"/></svg>Reset</button>
+        <span class="pb-readout" data-tip="Simulation rate — achieved / target" tabindex="0"><label>Rate</label><span id="dock-rate">—</span></span>
+        <span class="pb-readout"><label>T+</label><span id="dock-time">00:00.0</span></span>
+      </div>
+    </div>
+    <div class="event-log dock-pane" id="event-log" data-pane="events"></div>
+    <div class="alerts-list dock-pane" id="alerts-list" data-pane="alerts" hidden><div class="empty">No active alerts.</div></div>
+    <div class="charts dock-pane" id="charts" data-pane="charts" hidden>
+      <div class="chart"><canvas id="chart-alt" aria-label="Altitude chart"></canvas></div>
+      <div class="chart"><canvas id="chart-speed" aria-label="Speed chart"></canvas></div>
+      <div class="chart"><canvas id="chart-battery" aria-label="Battery chart"></canvas></div>
+      <div class="chart"><canvas id="chart-sep" aria-label="Minimum separation chart"></canvas></div>
+    </div>
+    <div class="audit-list dock-pane" id="audit-list" data-pane="audit" hidden><div class="empty">No audited actions yet.</div></div>
+  </section>
+</div>
+<!-- Stage 5: Operator / Observer login (shown only when security.enabled) -->
+<div class="login" id="login" hidden>
+  <form class="login-card" id="login-form" autocomplete="on">
+    <img class="login-logo" src="assets/gandiv-logo.png" alt="" onerror="this.hidden=true">
+    <div class="login-title"><b>GANDIV</b><span class="sep">|</span>Swarm GCS</div>
+    <div class="login-sub">Sign in as Operator (full control) or Observer (read-only)</div>
+    <label>Username<input id="login-user" name="username" autocomplete="username" required maxlength="64"></label>
+    <label>Password<input id="login-pass" name="password" type="password" autocomplete="current-password" maxlength="256"></label>
+    <div class="login-error" id="login-error" role="alert"></div>
+    <button class="btn main primary" id="login-submit" type="submit">Sign in</button>
+  </form>
+</div>
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+<div id="toasts" aria-live="polite"></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Runtime
+numpy>=1.26
+scipy>=1.11
+pyyaml>=6.0
+fastapi>=0.110
+uvicorn[standard]>=0.29
+psutil>=5.9
+
+# Hardware adapters (optional, Stage 5): real / SITL vehicles
+pymavlink>=2.4.40
+mavsdk>=4.0
+
+# Tests
+pytest>=8.0
+httpx>=0.27

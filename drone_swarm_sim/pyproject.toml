@@ -1,0 +1,27 @@
+[project]
+name = "drone-swarm-sim"
+version = "0.1.0"
+description = "Multi-UAV swarm simulation platform for swarm-algorithm development and testing"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pyyaml>=6.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+hardware = ["pymavlink>=2.4.40", "mavsdk>=4.0"]    # Stage 5 hardware adapters (optional)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+markers = [
+    "slow: long-running performance tests (deselect with -m 'not slow')",
+    "sitl: needs ArduPilot SITL binaries ($SWARM_SITL_DIR); skipped otherwise",
+]

@@ -1,0 +1,10 @@
+services:
+  playwrightcore:
+    image: playwrightcore
+    build:
+      context: drone_swarm_sim/.venv/Lib/site-packages/playwright/driver/package
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000

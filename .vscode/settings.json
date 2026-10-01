@@ -1,0 +1,14 @@
+{
+    // Use the project's virtual environment (it has all dependencies installed).
+    "python.defaultInterpreterPath": "${workspaceFolder}/drone_swarm_sim/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+
+    // New terminals open inside the project, so `python -m simulation` works directly.
+    "terminal.integrated.cwd": "${workspaceFolder}/drone_swarm_sim",
+
+    // Test Explorer: run the pytest suite from the project folder.
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.cwd": "${workspaceFolder}/drone_swarm_sim",
+    "python.testing.pytestArgs": ["tests"]
+}
